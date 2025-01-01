@@ -1,0 +1,14 @@
+UV (Package Manager)
+Author: astral
+Repository: https://github.com/astral-sh/uv
+License: Apache-2.0
+
+Click (Command Line Interface)
+Author: Pallets
+Repository: https://github.com/pallets/click
+License: BSD-3-Clause
+
+Requests (HTTP Library)
+Author: Kenneth Reitz
+Repository: https://github.com/psf/requests
+License: Apache-2.0

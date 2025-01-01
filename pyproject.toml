@@ -1,0 +1,53 @@
+[project]
+name = "mspyl"
+version = "0.1.1"
+description = "A Powerful command-line tool for managing Python packages and projects."
+readme = "README.md"
+requires-python = ">=3.8"
+keywords = ["package", "python", "manager", "cli", "launcher", "project", "mspyl"]
+authors = [{ name = "mazinko450", email = "kofimazin@gmail.com" },]
+maintainers = [{ name = "Mazen Abdulrahman Shaikh", email = "kofimazin@gmail.com" },]
+license = { file = "LICENSE" }
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: GNU General Public License v3 (GPLv3) ",
+    "Programming Language :: Python :: 3",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+]
+dependencies = [
+    "click>=7.1.2",
+    "requests>=2.32.3",
+    "rich>=13.9.4",
+    "uv>=0.5.11",
+]
+
+[project.urls]
+# --- General Project Information ---
+"Homepage" = "https://github.com/mazinko450/mspyl" 
+"Documentation" = "https://my-awesome-project.readthedocs.io"
+"Release Notes" = "https://github.com/mazinko450/mspyl/releases" 
+
+# --- Source Code & Development ---
+"Source Code" = "https://github.com/mazinko450/mspyl"
+"Bug Tracker" = "https://github.com/mazinko450/mspyl/issues"
+"Pull Requests "= "https://github.com/mazinko450/mspyl/pulls"
+
+# --- Download ---
+"Download" = "https://pypi.org/project/mspyl/#files"
+
+# --- GitHub Statistics (Shields.io Badges) ---
+"GitHub Stars" = "https://img.shields.io/github/stars/mazinko450/mspyl?style=social"  # Badge showing the number of GitHub stars
+"GitHub Forks" = "https://img.shields.io/github/forks/mazinko450/mspyl?style=social"  # Badge showing the number of GitHub forks
+"GitHub Issues" = "https://img.shields.io/github/issues/mazinko450/mspyl"  # Badge showing the number of open GitHub issues
+"GitHub Pull Requests" = "https://img.shields.io/github/issues-pr/mazinko450/mspyl"  # Badge showing the number of open GitHub pull requests
+"GitHub Contributors" = "https://img.shields.io/github/contributors/mazinko450/mspyl"  # Badge showing the number of GitHub contributors
+"GitHub Last Commit" = "https://img.shields.io/github/last-commit/mazinko450/mspyl"  # Badge showing the date/time of the last GitHub commit
+"GitHub License" = "https://img.shields.io/github/license/mazinko450/mspyl"  # Badge showing the project's license from GitHub
+"GitHub Actions" = "https://github.com/mazinko450/mspyl/actions"  # Link to your CI/CD pipeline (e.g., GitHub Actions)
+
+[project.scripts]
+mspyl = "src.__main__:main"
+
+[tool.uv]
+package = true
