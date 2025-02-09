@@ -33,7 +33,7 @@ uv pip install mspyl
 
 **Note: If You Want To Pass Any Option To UV Directly Must Start With * Sign And Replace Spaces With ! Sign Like This:**
 ```bash
-mspyl install *-e!. # Equal to uv pip install -e .
+mspyl install *-e!.
 ```
 
 ### 1. Install Python Packages
@@ -42,7 +42,7 @@ mspyl install *-e!. # Equal to uv pip install -e .
 
 ```bash
 # Install a single package (specify Python version)
-mspyl install package_name
+mspyl install *package_name
 
 # Install from requirements.txt
 mspyl install *-r!requirements.txt

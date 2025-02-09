@@ -96,7 +96,6 @@ class BuildManager:
         if github:
             # Implementation for GitHub release
             print("GitHub release functionality not yet implemented.")
-            pass
 
 
 @click.command()

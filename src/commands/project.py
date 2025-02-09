@@ -26,38 +26,37 @@ class ProjectManager:
         self.uv_path = f"uv{'.exe' if os.name == 'nt' else ''}"
 
     def create_project(self, args: str) -> Path:
-        """The `create_project` function initializes a new project by running a subprocess to initialize it and
-        updating the `pyproject.toml` file with a template downloaded from a specified URL.
-        
+        """Initialize a new project and set up pyproject.toml.
         Parameters
         ----------
         args : str
-            The `args` parameter in the `create_project` method is a string that contains arguments for
-        initializing a new project. These arguments are processed by stripping any leading asterisks,
-        replacing exclamation marks with spaces, and then splitting the string into a list of individual
-        arguments. These arguments are then used in
-        
+            Arguments for project initialization, separated by '!' or spaces.
         Returns
         -------
-            The `create_project` method returns the `Path` of the project directory.
-        
+        Path
+            Project directory path.
         """
-        args_list: list[str] = args.strip("*").replace("!", " ").split()
-        # Create new project
-        subprocess.run([
-            self.uv_path,
-            "init",
-        ] + args_list, check=True)
+        # Process arguments more efficiently
+        args_list: list[str] = [arg for arg in args.strip('*').replace('!', ' ').split() if arg]
 
-        # Update pyproject.toml
-        pyproject_path: Path = self.project_dir / "pyproject.toml"
-        pyproject_url: str = "https://raw.githubusercontent.com/mazinko450/programming_templates/a17b17c993bf0db6a9b3120daba4d5de4fe836ec/python/python_package_template.toml"
-        if not pyproject_path.exists():
-            # Download the pyproject.toml template from the internet
-            pyproject_path.write_text(
-                requests.Session().get(pyproject_url).text
-            )
+        try:
+            # Create new project using UV
+            subprocess.run([self.uv_path, "init"] + args_list, 
+                         check=True, 
+                         capture_output=True)
 
+            # Update pyproject.toml if it doesn't exist
+            pyproject_path = self.project_dir / "pyproject.toml"
+            if not pyproject_path.exists():
+                    TEMPLATE_URL = "https://raw.githubusercontent.com/mazinko450/programming_templates/a17b17c993bf0db6a9b3120daba4d5de4fe836ec/python/python_package_template.toml"
+
+                    with requests.Session() as session:
+                        response = session.get(TEMPLATE_URL)
+                        response.raise_for_status()  # Check for HTTP errors
+                        pyproject_path.write_text(response.text)
+
+        except (subprocess.CalledProcessError, requests.RequestException) as e:
+            raise RuntimeError(f"Failed to create project: {str(e)}") from e
         return self.project_dir
 
     def delete_project(self) -> Path:

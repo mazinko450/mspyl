@@ -9,11 +9,7 @@ from typing import List, Union
 
 
 import click
-from rich.console import Console
-
-
-console = Console()
-
+from rich import print
 
 
 class VenvManager:
@@ -61,11 +57,12 @@ class VenvManager:
                 check=True,
             )
 
-            console.print(
-                "Virtual environment created successfully", style="bold green"
+            print(
+                "[bold green]Virtual environment created successfully[/bold green]"
             )
         except subprocess.CalledProcessError as e:
-            raise Exception(f"Error creating virtual environment: {e}")
+            e.add_note(" Error creating virtual environment ")
+            raise e
 
     def activate(self) -> None:
         """The `activate` function sets up the virtual environment by updating environment variables and
@@ -78,9 +75,10 @@ class VenvManager:
                 str(self.venv_path / self.bin_dir),
                 os.environ["PATH"],
             ])
-            console.print("Virtual environment activated", style="bold green")
+            print("[bold green]Virtual environment activated[/bold green]")
         except (KeyError, TypeError) as e:
-            raise Exception(f"Error activating virtual environment: {e}")
+            e.add_note(" Error activating virtual environment ")
+            raise e
 
     def deactivate(self) -> None:
         """The `deactivate` function in Python deactivates a virtual environment by removing its path from the
@@ -96,7 +94,7 @@ class VenvManager:
                 if not p.startswith(os.environ["VIRTUAL_ENV"])
             )
             del os.environ["VIRTUAL_ENV"]
-        console.print("Virtual environment deactivated", style="bold green")
+        print("[bold green]Virtual environment deactivated[/bold green]")
 
     def add_package(self, packages: str) -> None:
         """The `add_package` function adds packages to dependencies and installs them using UV and pip in
@@ -112,27 +110,20 @@ class VenvManager:
         """
         
         try:
-            package_list: List[str] = packages.lower().split()
+            package_list: List[str] = packages.split()
 
-            # Add packages to dependencies using UV
-            cmd: List[str] = [str(self.uv_path), "add"] + package_list
+            # Add & Install packages to dependencies using UV
+            cmd: List[str] = [str(self.uv_path), "add", "--compile-bytecode"] + package_list
             subprocess.run(cmd, check=True)
 
-            # Install packages using UV
-            cmd: List[str] = [
-                str(self.uv_path),
-                "pip",
-                "install",
-                "--compile-bytecode"
-            ] + package_list
             subprocess.run(cmd, check=True)
 
-            console.print(
-                f"Packages {', '.join(package_list)} added successfully",
-                style="bold green",
+            print(
+                f"[bold green]Packages {', '.join(package_list)} added successfully[/bold green]"
             )
         except subprocess.CalledProcessError as e:
-            raise Exception(f"Error adding packages: {e}")
+            e.add_note(" Error adding packages ")
+            raise e
 
     def remove_package(self, packages: str) -> None:
         """The `remove_package` function removes specified packages using UV and displays a success message,
@@ -163,12 +154,12 @@ class VenvManager:
                 [str(self.uv_path), "remove"] + package_list, check=True
             )
 
-            console.print(
-                f"Package {', '.join(package_list)} removed successfully",
-                style="bold green",
+            print(
+                f"[bold green]Package {', '.join(package_list)} removed successfully[/bold green]"
             )
         except subprocess.CalledProcessError as e:
-            raise Exception(f"Error removing package: {e}")
+            e.add_note(" Error removing package ")
+            raise e
 
     def remove_venv(self) -> None:
         """The `remove_venv` function deactivates the virtual environment and removes its directory.
@@ -178,8 +169,8 @@ class VenvManager:
 
         self.deactivate()
         shutil.rmtree(self.venv_path, ignore_errors=True)
-        console.print(
-            "Virtual environment removed successfully", style="bold green"
+        print(
+            "[bold green]Virtual environment removed successfully[/bold green]"
         )
 
     def list_installed_packages(self) -> None:
@@ -189,13 +180,14 @@ class VenvManager:
         """
         
         try:
-            console.print("\nInstalled packages:\n", style="bold green")
+            print("\n[bold green]Installed packages:[/bold green]\n")
             subprocess.run(
                 [str(self.uv_path), "pip", "freeze"],
                 check=True,
             )
         except subprocess.CalledProcessError as e:
-            raise Exception(f"Error listing installed packages. Please ensure the virtual environment is activated and has pip installed. {e}")
+            e.add_note(" Error listing installed packages. Please ensure the virtual environment is activated and has pip installed ")
+            raise e
 
     def list_updates(self) -> List[str]:
         """This Python function lists available updates for pip packages using subprocess.
@@ -211,17 +203,18 @@ class VenvManager:
         """
         
         try:
-            console.print("\nAvailable updates:\n", style="bold green")
+            print("\n[bold green]Available updates:[/bold green]\n")
             result: subprocess.CompletedProcess[str] = subprocess.run(
                 [str(self.uv_path), "pip", "list", "--outdated"],
                 capture_output=True,
                 text=True,
                 check=True,
             )
-            console.print(result.stdout)
+            print(result.stdout)
             return result.stdout.splitlines()[2:]
         except subprocess.CalledProcessError as e:
-            raise Exception(f"Error checking updates: {e}")
+            e.add_note(" Error checking updates ")
+            raise e
 
     def list_dependencies(self) -> None:
         """The function `list_dependencies` prints the dependencies tree using the `pip tree` command.
@@ -229,13 +222,14 @@ class VenvManager:
         """
         
         try:
-            console.print("\nDependencies tree:\n", style="bold green")
+            print("\n[bold green]Dependencies tree:[/bold green]\n")
             subprocess.run(
                 [str(self.uv_path), "pip", "tree"],
                 check=True,
             )
         except subprocess.CalledProcessError as e:
-            raise Exception(f"Error listing dependencies: {e}")
+            e.add_note(" Error listing dependencies. Please ensure the virtual environment is activated and has pip installed ")
+            raise e
 
     def update_packages(self, packages: str = "") -> None:
         """The function `update_packages` attempts to upgrade specified packages using pip.
@@ -254,7 +248,8 @@ class VenvManager:
                 cmd.extend(packages)
 
         except subprocess.CalledProcessError as e:
-            raise Exception(f"Error upgrading packages: {e}")
+            e.add_note(" Error updating packages. Please ensure the virtual environment is activated and has pip installed ")
+            raise e
         
     def update_all_packages(self) -> None:
         """The function `update_all_packages` upgrades all packages listed in the output of `list_updates`
@@ -263,20 +258,20 @@ class VenvManager:
         """
         
         try:
-            packages_list: List[str] = [line.split()[0] for line in self.list_updates()]
-            if packages_list:
+            if packages_list := [line.split()[0] for line in self.list_updates()]:
                 cmd: List[str] = [str(self.uv_path), "pip", "install", "--compile-bytecode", "--upgrade"] + packages_list
                 subprocess.run(cmd, check=True)
-                console.print(
-                    "Packages upgraded successfully", style="bold green"
+                print(
+                    "[bold green]Packages upgraded successfully[/bold green]"
                 )
             else:
-                console.print("No packages to upgrade", style="bold green")
+                print("[bold green]No packages to upgrade[/bold green]")
 
 
-            
+
         except subprocess.CalledProcessError as e:
-            raise Exception(f"Error upgrading all packages: {e}")
+            e.add_note("Error upgrading all packages. Please ensure the virtual environment is activated and has pip installed ")
+            raise e
 
 
 @click.group()

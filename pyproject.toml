@@ -1,9 +1,9 @@
 [project]
 name = "mspyl"
-version = "0.1.1"
+version = "0.2.0"
 description = "A Powerful command-line tool for managing Python packages and projects."
 readme = "README.md"
-requires-python = ">=3.8"
+requires-python = ">=3.9"
 keywords = ["package", "python", "manager", "cli", "launcher", "project", "mspyl"]
 authors = [{ name = "mazinko450", email = "kofimazin@gmail.com" },]
 maintainers = [{ name = "Mazen Abdulrahman Shaikh", email = "kofimazin@gmail.com" },]
@@ -11,12 +11,23 @@ license = { file = "LICENSE" }
 classifiers = [
     "Development Status :: 3 - Alpha",
     "Intended Audience :: Developers",
+    "Operating System :: OS Independent",
     "License :: OSI Approved :: GNU General Public License v3 (GPLv3) ",
     "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Software Development",
+    "Topic :: Software Development :: Build Tools",
+    "Topic :: Software Development :: Compilers",
     "Topic :: Software Development :: Libraries :: Python Modules",
+    "Typing :: Typed"
 ]
 dependencies = [
     "click>=7.1.2",
+    "pyfiglet>=1.0.2",
     "requests>=2.32.3",
     "rich>=13.9.4",
     "uv>=0.5.11",
@@ -47,7 +58,7 @@ dependencies = [
 "GitHub Actions" = "https://github.com/mazinko450/mspyl/actions"  # Link to your CI/CD pipeline (e.g., GitHub Actions)
 
 [project.scripts]
-mspyl = "src.__main__:main"
+mspyl = "src.main:main"
 
 [tool.uv]
 package = true

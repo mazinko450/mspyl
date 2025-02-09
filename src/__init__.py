@@ -2,12 +2,12 @@
 MSPYL - Mazen Shaikh's Python Launcher
 A powerful CLI tool for Python package management
 """
-from .commands import build_commands, package_commands, project_commands, venv_commands
+from .commands import build, package, project, venv
 
 __all__ = [
-    "build_commands",
-    "package_commands",
-    "project_commands",
-    "venv_commands"
+    "build",
+    "package",
+    "project",
+    "venv"
 ]
-__version__ = "0.1.1"
+__version__ = "0.2.0"

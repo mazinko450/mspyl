@@ -6,13 +6,12 @@ import sys
 from typing import Any, Callable, List, Optional
 
 import click
-from rich.console import Console
+from rich import print
 from rich.progress import Progress
 from rich.table import Table
 
-console = Console()
 
-UV_EXECUTABLE = "uv"
+UV_EXECUTABLE = "uv.exe" if sys.platform == "win32" else " uv"
 PIP_COMMAND = "pip"
 UPGRADE_FLAG = "--upgrade"
 SYSTEM_FLAG = "--system"
@@ -28,15 +27,14 @@ def run_command(
         )
         return result
     except FileNotFoundError as e:
-        raise Exception(
-            f"{e} or may {UV_EXECUTABLE} not found. Please ensure it's installed and in your PATH."
-        )
-    except subprocess.CalledProcessError as e:
-        raise Exception(
-            f"Error executing command {cmd}: {e.stderr}"
-        )
+        e.add_note(" or may uv not found. Please ensure it's installed and in your PATH.")
+        raise e
 
-def get_python_version(path: str) -> str:
+    except subprocess.CalledProcessError as e:
+        e.add_note(f" Error executing command `{cmd}` ")
+        raise e
+
+def get_python_version(path: str) -> Optional[str]:
     """The function `get_python_version` takes a path to a Python executable and returns the version
     information as a string.
     
@@ -53,8 +51,7 @@ def get_python_version(path: str) -> str:
     
     """
 
-    python_version: subprocess.CompletedProcess[str] = run_command([path.strip(), "--version"])
-    if python_version:
+    if python_version := run_command([path.strip(), "--version"]):
         return python_version.stdout.strip()
 
 def locate_python_version(target_version: str) -> str:
@@ -93,11 +90,9 @@ def locate_python_version(target_version: str) -> str:
     )
     matching_paths: List[str] = []
 
-    for path in paths:
-        matching_paths.append(path)
-
+    matching_paths.extend(iter(paths))
     if not matching_paths:
-        console.print(f"No Python {target_version} versions found.", style="bold red")
+        print(f"[bold red]No Python {target_version} versions found.[/bold red]")
     return "\n".join(matching_paths)
 
 class PackageManager:
@@ -127,11 +122,10 @@ class PackageManager:
         ):
             self.python_path = locate_python_version(self.python_version)
             if not self.python_path:
-                console.print(
+                print(
                     f"[bold red]Error: Could not locate Python version {self.python_version}.[/bold red]"
                 )
-        else:
-            self.python_path = sys.executable
+
 
     def install(self, args: str) -> None:
         """The `install` function in Python takes a string of arguments, processes them, and then runs a
@@ -153,26 +147,26 @@ class PackageManager:
             cmd = [
                 self.python_path.strip(),
                 "-m",
-                UV_EXECUTABLE,
+                "uv",
                 PIP_COMMAND,
                 "install",
+                *list_of_args,
                 "--compile-bytecode"
-            ] + list_of_args
+            ]
 
         else:
             cmd = [
                 UV_EXECUTABLE,
                 PIP_COMMAND,
                 "install",
+                *list_of_args,
                 SYSTEM_FLAG,
                 "--compile-bytecode"
-            ] + list_of_args
+            ]
 
-        result: subprocess.CompletedProcess[str] = run_command(cmd)
-
-        if result:
-            console.print(result.stdout)
-            console.print(
+        if result := run_command(cmd):
+            print(result.stdout)
+            print(
                 "[bold green]Packages installed successfully.[/bold green]"
             )
 
@@ -199,23 +193,23 @@ class PackageManager:
             cmd = [
                 self.python_path,
                 "-m",
-                UV_EXECUTABLE,
+                "uv",
                 PIP_COMMAND,
                 "uninstall",
-            ] + list_of_args
+                *list_of_args,
+            ]
 
         else:
             cmd = [
                 UV_EXECUTABLE,
                 PIP_COMMAND,
                 "uninstall",
+                *list_of_args,
                 SYSTEM_FLAG,
-            ] + list_of_args
+            ]
 
-        result: subprocess.CompletedProcess[str] = run_command(cmd)
-
-        if result:
-            console.print(
+        if _ := run_command(cmd):
+            print(
                 "[bold green]Packages uninstalled successfully.[/bold green]"
             )
 
@@ -230,7 +224,7 @@ class PackageManager:
             cmd = [
                 self.python_path.strip(),
                 "-m",
-                UV_EXECUTABLE,
+                "uv",
                 PIP_COMMAND,
                 "install",
                 package_name,
@@ -245,9 +239,8 @@ class PackageManager:
                 UPGRADE_FLAG,
                 SYSTEM_FLAG,
             ]
-        result: subprocess.CompletedProcess[str] = run_command(cmd)
-        if result:
-            console.print(
+        if _ := run_command(cmd):
+            print(
                 f"[bold green]Package '{package_name}' updated successfully.[/bold green]"
             )
 
@@ -282,7 +275,7 @@ class PackageManager:
                     cmd = [
                         self.python_path.strip(),
                         "-m",
-                        UV_EXECUTABLE,
+                        "uv",
                         PIP_COMMAND,
                         "install",
                         package,
@@ -299,11 +292,11 @@ class PackageManager:
                     ]
                 result = run_command(cmd, check=False)
                 if result and result.returncode != 0:
-                    console.print(
+                    print(
                         f"[bold red]Error updating {package}:[/bold red] {result.stderr}"
                     )
                 progress.update(task, advance=1)
-        console.print(
+        print(
             "[bold green]All packages updated successfully.[/bold green]"
         )
 
@@ -329,19 +322,19 @@ class PackageManager:
         ]
         if package_name:
             cmd.append(package_name)
-        result = run_command(cmd)
-        if result and result.stdout:
-            table = Table(title="Outdated Packages")
-            table.add_column("Package", style="cyan", no_wrap=True)
-            table.add_column("Current Version", style="magenta")
-            table.add_column("Latest Version", style="green")
-            for line in result.stdout.strip().splitlines()[2:]:
-                parts = line.split()
-                if len(parts) == 3:
-                    table.add_row(parts[0], parts[1], parts[2])
-            console.print(table)
-        elif result:
-            console.print("No outdated packages found.")
+        if result := run_command(cmd):
+            if result.stdout:
+                table = Table(title="Outdated Packages")
+                table.add_column("Package", style="cyan", no_wrap=True)
+                table.add_column("Current Version", style="magenta")
+                table.add_column("Latest Version", style="green")
+                for line in result.stdout.strip().splitlines()[2:]:
+                    parts: List[str] = line.split()
+                    if len(parts) == 3:
+                        table.add_row(parts[0], parts[1], parts[2])
+                print(table)
+            else:
+                print("\n[yellow]No outdated packages found.[/yellow]\n")
 
     @staticmethod
     def list_python_versions() -> None:
@@ -362,12 +355,12 @@ class PackageManager:
         table.add_column("Path", style="magenta")
         if result:
             for path in result.stdout.strip().splitlines():
-                version: str = get_python_version(path)
+                version: Optional[str] = get_python_version(path)
                 if "venv" in path:
                     table.add_row(f"venv{version.strip('Python'):>9}", path)
                 else:
                     table.add_row(version, path)
-        console.print(table)
+        print(table)
 
     @staticmethod
     def list_external_modules() -> None:
@@ -376,18 +369,21 @@ class PackageManager:
         
         """
         
-        result: subprocess.CompletedProcess[str] = run_command([UV_EXECUTABLE, PIP_COMMAND, "list", SYSTEM_FLAG])
-        if result and result.stdout:
+        if not (
+            _ := run_command([UV_EXECUTABLE, PIP_COMMAND, "list", SYSTEM_FLAG])
+        ):
+            return
+        if _.stdout:
             table = Table(title="External Modules")
             table.add_column("Package", style="cyan", no_wrap=True)
             table.add_column("Version", style="magenta")
             table.add_column("Location", style="green")
-            for line in result.stdout.strip().splitlines()[2:]:
+            for line in _.stdout.strip().splitlines()[2:]:
                 parts: List[str] = line.split()
                 table.add_row(*parts)
-            console.print(table)
-        elif result:
-            console.print("No external modules found.")
+            print(table)
+        else:
+            print("No external modules found.")
 
     @staticmethod
     def list_internal_modules() -> None:
@@ -401,7 +397,7 @@ class PackageManager:
         for module in sys.builtin_module_names:
             if "_" not in module:
                 table.add_row(module)
-        console.print(table)
+        print(table)
 
 
 @click.command()
@@ -409,15 +405,15 @@ class PackageManager:
 @click.option(
     "-py", "--python", type=click.STRING, help="Python version to use", required=False
 )
-def install(args: str, py: Optional[str]) -> None:
+def install(args: str, python: Optional[str]) -> None:
     """Install a Python package.
     Note: Anything after install command must start with * sign and replace spaces with ! sign
     """
-    pm = PackageManager(python_version=py)
+    pm = PackageManager(python_version=python)
     if args[0] == "*":
         pm.install(args=args)
     else:
-        console.print(
+        print(
             "[bold red]Error: Anything after install command must start with * sign and replace spaces with ! sign[/bold red]"
         )
 
@@ -427,27 +423,27 @@ def install(args: str, py: Optional[str]) -> None:
 @click.option(
     "-py", "--python", type=click.STRING, help="Python version to use", required=False
 )
-def uninstall(args: str, py: Optional[str]) -> None:
+def uninstall(args: str, python: Optional[str]) -> None:
     """Uninstall a Python package."""
-    pm = PackageManager(python_version=py)
+    pm = PackageManager(python_version=python)
     pm.uninstall(args)
 
 
 @click.command()
 @click.argument("package_name", required=False)
 @click.option(
-    "--py", "--python", type=click.STRING, help="Python version to use", required=False
+    "-py", "--python", type=click.STRING, help="Python version to use", required=False
 )
 @click.option("--all", is_flag=True, help="Update all packages", default=False)
-def update(package_name: str, py: Optional[str], all: bool) -> None:
+def update(package_name: str, python: Optional[str], all: bool) -> None:
     """Update packages or Python version."""
-    pm = PackageManager(python_version=py)
+    pm = PackageManager(python_version=python)
     if package_name:
         pm.update(package_name)
     elif all:
         pm.update_all()
     else:
-        console.print(
+        print(
             "[bold red]Please specify a package name or use --all to update all packages.[/bold red]"
         )
 
@@ -475,9 +471,8 @@ def list(
 ) -> None:
     """Lists Python versions, internal modules, external modules, outdated modules or all."""
     if not any([python, internal, external, outdated, all]):
-        console.print(
-            "Please specify at least one option: --python, --internal, --external, --outdated, or --all",
-            style="bold red"
+        print(
+            "[bold red]Please specify at least one option: --python, --internal, --external, --outdated, or --all[/bold red]"
         )
         return None
 

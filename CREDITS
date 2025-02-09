@@ -12,3 +12,13 @@ Requests (HTTP Library)
 Author: Kenneth Reitz
 Repository: https://github.com/psf/requests
 License: Apache-2.0
+
+Rich (Formatting In The Terminal)
+Author: Will McGugan
+Repository: https://github.com/Textualize/rich
+Licenses: MIT License
+
+PyFiglet (ASCII Fonts Library)
+Author: Peter Waller
+Repository: https://github.com/pwaller/pyfiglet
+License: MIT License

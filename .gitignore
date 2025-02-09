@@ -5,11 +5,11 @@ build/
 dist/
 wheels/
 *.egg-info
+*.spec
 
 # Virtual environments
 .venv
 @
 .vscode
 
-*.spec
 
